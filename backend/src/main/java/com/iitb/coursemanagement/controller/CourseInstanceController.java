@@ -141,6 +141,85 @@ public class CourseInstanceController {
     }
 
     @Operation(
+        summary = "Update instance",
+        description = "Updates a specific course instance"
+    )
+    @PutMapping(
+        value = "/{year}/{semester}/{courseId}",
+        consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<?> updateInstance(
+            @PathVariable Integer year,
+            @PathVariable Integer semester,
+            @PathVariable String courseId,
+            @RequestBody CourseInstance updatedInstance) {
+        try {
+            // Validate required fields
+            if (updatedInstance.getCourseId() == null || updatedInstance.getCourseId().trim().isEmpty() ||
+                updatedInstance.getYear() == null || updatedInstance.getSemester() == null ||
+                updatedInstance.getInstructor() == null || updatedInstance.getInstructor().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Course ID, year, semester, and instructor are required");
+            }
+
+            // Validate year format (YYYY)
+            if (updatedInstance.getYear() < 2000 || updatedInstance.getYear() > 2100) {
+                return ResponseEntity.badRequest().body("Year must be in YYYY format between 2000 and 2100");
+            }
+
+            // Validate semester value
+            if (updatedInstance.getSemester() != 1 && updatedInstance.getSemester() != 2) {
+                return ResponseEntity.badRequest().body("Semester must be either 1 or 2");
+            }
+
+            // Check if the instance exists
+            Optional<CourseInstance> existingInstance = instanceRepository
+                .findByYearAndSemesterAndCourseId(year, semester, courseId);
+            if (existingInstance.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Find the associated course
+            Optional<Course> course = courseRepository.findByCourseId(updatedInstance.getCourseId());
+            if (course.isEmpty()) {
+                return ResponseEntity.badRequest().body("Course not found: " + updatedInstance.getCourseId());
+            }
+
+            // If updating to a different year/semester/courseId combination, check for conflicts
+            if (!year.equals(updatedInstance.getYear()) ||
+                !semester.equals(updatedInstance.getSemester()) ||
+                !courseId.equals(updatedInstance.getCourseId())) {
+                
+                Optional<CourseInstance> conflictingInstance = instanceRepository
+                    .findByYearAndSemesterAndCourseId(
+                        updatedInstance.getYear(),
+                        updatedInstance.getSemester(),
+                        updatedInstance.getCourseId());
+                
+                if (conflictingInstance.isPresent()) {
+                    return ResponseEntity.badRequest()
+                        .body("Course instance already exists for the target year and semester");
+                }
+            }
+
+            // Update the instance
+            CourseInstance instance = existingInstance.get();
+            instance.setYear(updatedInstance.getYear());
+            instance.setSemester(updatedInstance.getSemester());
+            instance.setCourseId(updatedInstance.getCourseId());
+            instance.setInstructor(updatedInstance.getInstructor());
+            instance.setCourse(course.get());
+
+            CourseInstance savedInstance = instanceRepository.save(instance);
+            return ResponseEntity.ok(savedInstance);
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body("Failed to update course instance: " + e.getMessage());
+        }
+    }
+
+    @Operation(
         summary = "Delete instance",
         description = "Deletes a specific course instance"
     )

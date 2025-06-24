@@ -14,6 +14,8 @@ import {
   IconButton,
   Snackbar,
   Alert,
+  Chip,
+  Stack,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { courseApi } from '../services/api';
@@ -26,6 +28,7 @@ function CourseList() {
   const fetchCourses = async () => {
     try {
       const response = await courseApi.getAllCourses();
+      console.log('Courses:', response.data);
       setCourses(response.data);
     } catch (err) {
       setError('Failed to fetch courses');
@@ -66,9 +69,9 @@ function CourseList() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Course Code</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Credits</TableCell>
+              <TableCell>Course ID</TableCell>
+              <TableCell>Title</TableCell>
+              <TableCell>Description</TableCell>
               <TableCell>Prerequisites</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -76,11 +79,21 @@ function CourseList() {
           <TableBody>
             {courses.map((course) => (
               <TableRow key={course.id}>
-                <TableCell>{course.courseCode}</TableCell>
-                <TableCell>{course.name}</TableCell>
-                <TableCell>{course.credits}</TableCell>
+                <TableCell>{course.courseId}</TableCell>
+                <TableCell>{course.title}</TableCell>
+                <TableCell>{course.description}</TableCell>
                 <TableCell>
-                  {course.prerequisites?.map(pre => pre.courseCode).join(', ')}
+                  <Stack direction="row" spacing={1}>
+                    {course.prerequisites?.map((prereq) => (
+                      <Chip
+                        key={prereq.id}
+                        label={prereq.courseId}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Stack>
                 </TableCell>
                 <TableCell>
                   <IconButton

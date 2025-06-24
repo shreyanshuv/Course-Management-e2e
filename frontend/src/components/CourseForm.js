@@ -9,6 +9,7 @@ import {
   Autocomplete,
   Snackbar,
   Alert,
+  Chip,
 } from '@mui/material';
 import { courseApi } from '../services/api';
 
@@ -18,10 +19,9 @@ function CourseForm() {
   const [error, setError] = useState('');
   const [availableCourses, setAvailableCourses] = useState([]);
   const [formData, setFormData] = useState({
-    courseCode: '',
-    name: '',
+    courseId: '',
+    title: '',
     description: '',
-    credits: '',
     prerequisites: [],
   });
 
@@ -37,10 +37,9 @@ function CourseForm() {
           const courseResponse = await courseApi.getCourse(id);
           const course = courseResponse.data;
           setFormData({
-            courseCode: course.courseCode,
-            name: course.name,
+            courseId: course.courseId,
+            title: course.title,
             description: course.description || '',
-            credits: course.credits.toString(),
             prerequisites: course.prerequisites || [],
           });
         }
@@ -56,15 +55,10 @@ function CourseForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const courseData = {
-        ...formData,
-        credits: parseInt(formData.credits, 10),
-      };
-
       if (id) {
-        await courseApi.updateCourse(id, courseData);
+        await courseApi.updateCourse(id, formData);
       } else {
-        await courseApi.createCourse(courseData);
+        await courseApi.createCourse(formData);
       }
       navigate('/');
     } catch (err) {
@@ -91,19 +85,20 @@ function CourseForm() {
         <TextField
           fullWidth
           margin="normal"
-          label="Course Code"
-          name="courseCode"
-          value={formData.courseCode}
+          label="Course ID"
+          name="courseId"
+          value={formData.courseId}
           onChange={handleChange}
           required
+          helperText="e.g., CS101"
         />
 
         <TextField
           fullWidth
           margin="normal"
-          label="Course Name"
-          name="name"
-          value={formData.name}
+          label="Course Title"
+          name="title"
+          value={formData.title}
           onChange={handleChange}
           required
         />
@@ -119,21 +114,10 @@ function CourseForm() {
           rows={4}
         />
 
-        <TextField
-          fullWidth
-          margin="normal"
-          label="Credits"
-          name="credits"
-          type="number"
-          value={formData.credits}
-          onChange={handleChange}
-          required
-        />
-
         <Autocomplete
           multiple
-          options={availableCourses}
-          getOptionLabel={(option) => `${option.courseCode} - ${option.name}`}
+          options={availableCourses.filter(course => course.id !== Number(id))}
+          getOptionLabel={(option) => `${option.courseId} - ${option.title}`}
           value={formData.prerequisites}
           onChange={(_, newValue) => {
             setFormData(prev => ({
@@ -141,6 +125,16 @@ function CourseForm() {
               prerequisites: newValue,
             }));
           }}
+          renderTags={(value, getTagProps) =>
+            value.map((option, index) => (
+              <Chip
+                label={option.courseId}
+                {...getTagProps({ index })}
+                color="primary"
+                variant="outlined"
+              />
+            ))
+          }
           renderInput={(params) => (
             <TextField
               {...params}

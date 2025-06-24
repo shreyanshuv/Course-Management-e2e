@@ -30,7 +30,7 @@ function App() {
           <Route path="/courses/edit/:id" element={<CourseForm />} />
           <Route path="/instances" element={<InstanceList />} />
           <Route path="/instances/new" element={<InstanceForm />} />
-          <Route path="/instances/edit/:id" element={<InstanceForm />} />
+          <Route path="/instances/edit/:year/:semester/:courseId" element={<InstanceForm />} />
         </Routes>
       </Container>
     </Router>

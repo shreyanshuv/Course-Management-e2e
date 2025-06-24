@@ -140,6 +140,86 @@ public class CourseController {
     }
     
     @Operation(
+        summary = "Update course",
+        description = "Updates an existing course with new information including prerequisites"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Course updated successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request - missing required fields or invalid prerequisites"),
+        @ApiResponse(responseCode = "404", description = "Course not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PutMapping("/{id}")
+    @Transactional
+    public ResponseEntity<?> updateCourse(@PathVariable Long id, @RequestBody Course course) {
+        try {
+            Optional<Course> existingCourse = courseRepository.findById(id);
+            if (existingCourse.isEmpty()) {
+                logger.warn("Course with ID {} not found", id);
+                return ResponseEntity.notFound().build();
+            }
+
+            // Validate required fields
+            if (course.getCourseId() == null || course.getCourseId().trim().isEmpty() ||
+                course.getTitle() == null || course.getTitle().trim().isEmpty()) {
+                logger.warn("Invalid course data - missing required fields");
+                return ResponseEntity.badRequest().body("Course ID and title are required");
+            }
+
+            // Check if the new courseId conflicts with any other course (except itself)
+            Optional<Course> courseWithSameId = courseRepository.findByCourseId(course.getCourseId());
+            if (courseWithSameId.isPresent() && !courseWithSameId.get().getId().equals(id)) {
+                logger.warn("Another course with ID {} already exists", course.getCourseId());
+                return ResponseEntity.badRequest().body("Another course with this ID already exists");
+            }
+
+            // Initialize prerequisites list if null
+            if (course.getPrerequisites() == null) {
+                course.setPrerequisites(new ArrayList<>());
+            }
+
+            // Validate and set prerequisites
+            if (!course.getPrerequisites().isEmpty()) {
+                Set<String> prereqIds = course.getPrerequisites().stream()
+                    .map(Course::getCourseId)
+                    .collect(Collectors.toSet());
+
+                logger.debug("Validating prerequisites: {}", prereqIds);
+
+                // Check if all prerequisites exist
+                List<Course> foundPrereqs = courseRepository.findByCourseIdIn(prereqIds);
+                if (foundPrereqs.size() != prereqIds.size()) {
+                    logger.warn("One or more prerequisites not found: {}", prereqIds);
+                    return ResponseEntity.badRequest().body("One or more prerequisites do not exist");
+                }
+
+                // Prevent self-reference
+                if (prereqIds.contains(course.getCourseId())) {
+                    logger.warn("Course cannot be its own prerequisite");
+                    return ResponseEntity.badRequest().body("Course cannot be its own prerequisite");
+                }
+
+                // Set the actual prerequisite objects
+                course.setPrerequisites(foundPrereqs);
+            }
+
+            // Set the ID from the path variable
+            course.setId(id);
+
+            logger.debug("Updating course with prerequisites");
+            Course updatedCourse = courseRepository.save(course);
+            
+            logger.info("Successfully updated course: {}", updatedCourse.getCourseId());
+            return ResponseEntity.ok(updatedCourse);
+            
+        } catch (Exception e) {
+            logger.error("Error updating course", e);
+            return ResponseEntity.internalServerError()
+                .body("Failed to update course: " + e.getMessage());
+        }
+    }
+    
+    @Operation(
         summary = "Delete course",
         description = "Deletes a course if it's not a prerequisite for any other course"
     )
