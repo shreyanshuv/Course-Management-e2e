@@ -16,9 +16,7 @@ import {
   Select,
 } from '@mui/material';
 import { instanceApi, courseApi } from '../services/api';
-
-const STATUS_OPTIONS = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
-const SEMESTERS = [1, 2];
+import { SEMESTER_OPTIONS } from '../utils/semesterUtils';
 
 function InstanceForm() {
   const { year: yearParam, semester: semesterParam, courseId: courseIdParam } = useParams();
@@ -30,8 +28,6 @@ function InstanceForm() {
     year: new Date().getFullYear(),
     semester: 1,
     instructor: '',
-    status: 'SCHEDULED',
-    maxCapacity: '',
   });
 
   // Generate year options (current year ± 5 years)
@@ -54,12 +50,10 @@ function InstanceForm() {
           const course = coursesResponse.data.find(c => c.courseId === instance.courseId);
           
           setFormData({
-            course: course,
+            course: course || null, // Ensure null if course not found
             year: instance.year,
             semester: instance.semester,
             instructor: instance.instructor,
-            status: instance.status || 'SCHEDULED',
-            maxCapacity: instance.maxCapacity?.toString() || '',
           });
         }
       } catch (err) {
@@ -80,10 +74,10 @@ function InstanceForm() {
       }
 
       const instanceData = {
-        ...formData,
+        courseId: formData.course.courseId,
         year: parseInt(formData.year, 10),
         semester: parseInt(formData.semester, 10),
-        maxCapacity: formData.maxCapacity ? parseInt(formData.maxCapacity, 10) : null,
+        instructor: formData.instructor,
       };
 
       if (yearParam && semesterParam && courseIdParam) {
@@ -95,7 +89,7 @@ function InstanceForm() {
       }
       navigate('/instances');
     } catch (err) {
-      setError('Failed to save course instance');
+      setError(err.response?.data || 'Failed to save course instance');
       console.error('Error saving course instance:', err);
     }
   };
@@ -127,6 +121,9 @@ function InstanceForm() {
                   course: newValue,
                 }));
               }}
+              isOptionEqualToValue={(option, value) => 
+                option.courseId === value.courseId
+              }
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -169,8 +166,10 @@ function InstanceForm() {
                 required
                 disabled={!!yearParam}
               >
-                {SEMESTERS.map((s) => (
-                  <MenuItem key={s} value={s}>Semester {s}</MenuItem>
+                {SEMESTER_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -187,56 +186,15 @@ function InstanceForm() {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
-              <InputLabel id="status-select-label">Status</InputLabel>
-              <Select
-                labelId="status-select-label"
-                name="status"
-                value={formData.status}
-                label="Status"
-                onChange={handleChange}
-                required
-              >
-                {STATUS_OPTIONS.map(status => (
-                  <MenuItem key={status} value={status}>
-                    {status.replace(/_/g, ' ')}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Maximum Capacity"
-              name="maxCapacity"
-              type="number"
-              value={formData.maxCapacity}
-              onChange={handleChange}
-              InputProps={{
-                inputProps: { min: 1 }
-              }}
-            />
-          </Grid>
-
           <Grid item xs={12}>
-            <Box display="flex" gap={2}>
-              <Button
-                variant="contained"
-                color="primary"
-                type="submit"
-              >
-                {yearParam ? 'Update Instance' : 'Create Instance'}
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => navigate('/instances')}
-              >
-                Cancel
-              </Button>
-            </Box>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+            >
+              {yearParam ? 'Update Instance' : 'Create Instance'}
+            </Button>
           </Grid>
         </Grid>
       </Box>

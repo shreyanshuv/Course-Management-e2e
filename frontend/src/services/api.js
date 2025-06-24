@@ -35,20 +35,16 @@ export const instanceApi = {
   getInstance: (year, semester, courseId) => 
     api.get(`/api/instances/${year}/${semester}/${courseId}`),
   createInstance: (instance) => api.post('/api/instances', {
-    courseId: instance.course.courseId,
+    courseId: instance.courseId,
     year: instance.year,
     semester: instance.semester,
-    instructor: instance.instructor,
-    maxCapacity: instance.maxCapacity,
-    status: instance.status
+    instructor: instance.instructor
   }),
   updateInstance: (year, semester, courseId, instance) => api.put(`/api/instances/${year}/${semester}/${courseId}`, {
-    courseId: instance.course.courseId,
+    courseId: instance.courseId,
     year: instance.year,
     semester: instance.semester,
-    instructor: instance.instructor,
-    maxCapacity: instance.maxCapacity,
-    status: instance.status
+    instructor: instance.instructor
   }),
   deleteInstance: (year, semester, courseId) => 
     api.delete(`/api/instances/${year}/${semester}/${courseId}`),

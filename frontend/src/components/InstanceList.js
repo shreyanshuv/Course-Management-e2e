@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon } from '@mui/icons-material';
 import { instanceApi } from '../services/api';
+import { SEMESTER_OPTIONS, getSemesterDisplay } from '../utils/semesterUtils';
 
 function InstanceList() {
   const [instances, setInstances] = useState([]);
@@ -33,7 +34,6 @@ function InstanceList() {
   // Generate year options (current year ± 5 years)
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
-  const semesterOptions = [1, 2];
 
   const fetchInstances = async () => {
     try {
@@ -101,8 +101,10 @@ function InstanceList() {
                 label="Semester"
                 onChange={(e) => setSemester(e.target.value)}
               >
-                {semesterOptions.map((s) => (
-                  <MenuItem key={s} value={s}>Semester {s}</MenuItem>
+                {SEMESTER_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -119,14 +121,13 @@ function InstanceList() {
               <TableCell>Year</TableCell>
               <TableCell>Semester</TableCell>
               <TableCell>Instructor</TableCell>
-              <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {instances.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} align="center">
+                <TableCell colSpan={6} align="center">
                   No course instances found for the selected year and semester
                 </TableCell>
               </TableRow>
@@ -136,9 +137,8 @@ function InstanceList() {
                   <TableCell>{instance.courseId}</TableCell>
                   <TableCell>{instance.courseTitle}</TableCell>
                   <TableCell>{instance.year}</TableCell>
-                  <TableCell>{instance.semester}</TableCell>
+                  <TableCell>{getSemesterDisplay(instance.semester)}</TableCell>
                   <TableCell>{instance.instructor}</TableCell>
-                  <TableCell>{instance.status}</TableCell>
                   <TableCell>
                     <IconButton
                       color="primary"
