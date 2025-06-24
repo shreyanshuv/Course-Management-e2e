@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -35,15 +35,6 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built files from builder stage
 COPY --from=builder /app/build /usr/share/nginx/html
 
-# Create non-root user
-RUN addgroup -S nginx-group && \
-    adduser -S nginx-user -G nginx-group && \
-    chown -R nginx-user:nginx-group /usr/share/nginx/html && \
-    chmod -R 755 /usr/share/nginx/html
-
-# Use non-root user
-USER nginx-user:nginx-group
-
 # Expose port
 EXPOSE 80
 
@@ -52,4 +43,4 @@ HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:80 || exit 1
 
 # Start nginx
-CMD ["nginx", "-g", "daemon off;"] 
+CMD ["nginx", "-g", "daemon off;"]

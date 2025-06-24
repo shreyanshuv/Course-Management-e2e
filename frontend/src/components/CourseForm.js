@@ -62,7 +62,17 @@ function CourseForm() {
       }
       navigate('/');
     } catch (err) {
-      setError('Failed to save course');
+      let errorMessage = 'An unexpected error occurred.';
+      if (err.response && err.response.data) {
+        // Handle backend errors (e.g., validation)
+        errorMessage = typeof err.response.data === 'string' 
+          ? err.response.data 
+          : JSON.stringify(err.response.data);
+      } else if (err.message) {
+        // Handle network errors or other issues
+        errorMessage = err.message;
+      }
+      setError(`Failed to save course: ${errorMessage}`);
       console.error('Error saving course:', err);
     }
   };

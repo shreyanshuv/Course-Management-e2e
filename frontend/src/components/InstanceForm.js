@@ -89,7 +89,17 @@ function InstanceForm() {
       }
       navigate('/instances');
     } catch (err) {
-      setError(err.response?.data || 'Failed to save course instance');
+      let errorMessage = 'An unexpected error occurred.';
+      if (err.response && err.response.data) {
+        // Handle backend errors (e.g., validation)
+        errorMessage = typeof err.response.data === 'string'
+          ? err.response.data
+          : JSON.stringify(err.response.data);
+      } else if (err.message) {
+        // Handle network errors or other issues
+        errorMessage = err.message;
+      }
+      setError(`Failed to save instance: ${errorMessage}`);
       console.error('Error saving course instance:', err);
     }
   };
