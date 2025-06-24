@@ -84,6 +84,8 @@ course-management/
 
 ## Getting Started
 
+For a simplified setup using Docker, please refer to our **[Docker Quick Start Guide](DOCKER_README.md)**.
+
 ### Prerequisites
 
 - Docker and Docker Compose
@@ -101,7 +103,7 @@ cd course-management
 2. Set your Docker Hub username:
 
 ```bash
-export DOCKER_USERNAME=your-dockerhub-username
+export DOCKER_USERNAME=shreyanshuv
 ```
 
 3. Start the application:
@@ -140,7 +142,7 @@ npm start
 1. **Docker Configuration**
 ```bash
 # Required for Docker operations
-export DOCKER_USERNAME=your-dockerhub-username
+export DOCKER_USERNAME=shreyanshuv
 
 # Verify the setting
 echo $DOCKER_USERNAME
@@ -149,7 +151,7 @@ echo $DOCKER_USERNAME
 You can add this to your shell's configuration file (`.bashrc`, `.zshrc`, etc.):
 ```bash
 # Add to ~/.bashrc or ~/.zshrc
-echo 'export DOCKER_USERNAME=your-dockerhub-username' >> ~/.zshrc
+echo 'export DOCKER_USERNAME=shreyanshuv' >> ~/.zshrc
 source ~/.zshrc
 ```
 
@@ -194,7 +196,7 @@ The system uses Docker environment variables for container configuration:
 1. **First Time Setup**
 ```bash
 # Set Docker username
-export DOCKER_USERNAME=your-dockerhub-username
+export DOCKER_USERNAME=shreyanshuv
 
 # Verify environment
 docker-compose config
@@ -229,7 +231,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
 ```bash
 # Error: DOCKER_USERNAME not set
 echo "DOCKER_USERNAME not set. Please set it:"
-export DOCKER_USERNAME=your-dockerhub-username
+export DOCKER_USERNAME=shreyanshuv
 ```
 
 2. **Verify Environment**
@@ -251,7 +253,7 @@ unset SPRING_PROFILES_ACTIVE
 unset REACT_APP_DEBUG
 
 # Set fresh environment
-export DOCKER_USERNAME=your-dockerhub-username
+export DOCKER_USERNAME=shreyanshuv
 export SPRING_PROFILES_ACTIVE=dev
 ```
 
