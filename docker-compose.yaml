@@ -1,0 +1,57 @@
+
+services:
+  backend:
+    image: ${DOCKER_USERNAME}/course-management-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: course-management-backend
+    cap_add:
+      - SYS_TIME  # Required for NTP time sync
+    volumes:
+      - ./data:/app/data
+      - /etc/localtime:/etc/localtime:ro  # Share host time
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - JAVA_OPTS=-Xms512m -Xmx1024m
+      - SQLITE_DB_PATH=/app/data/course_management.db
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/api/courses || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - course-management-network
+
+  frontend:
+    image: ${DOCKER_USERNAME}/course-management-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: course-management-frontend
+    cap_add:
+      - SYS_TIME  # Required for NTP time sync
+    volumes:
+      - /etc/localtime:/etc/localtime:ro  # Share host time
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:80 || exit 1
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    networks:
+      - course-management-network
+
+networks:
+  course-management-network:
+    driver: bridge
+
+volumes:
+  data:
+    driver: local 
